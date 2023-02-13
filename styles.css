@@ -1,0 +1,23 @@
+body {
+    background-color: #190000;
+    overflow: hidden;
+}
+
+.body-div {
+    height: 100vh;
+}
+
+.canvas-div {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.canvas {
+    border: solid;
+    border-color: #330000;
+    border-radius: 10px;
+    border-width: 7px;
+}
