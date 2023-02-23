@@ -1,5 +1,5 @@
 import { canvasBackgroundColor, defaultPointRadius, prepareObservationsColor } from "./constants.js";
-import { calcAvgDistanceBetweenPoints, generateRandomColor, getRandomPoints } from "./utils.js";
+import { generateRandomColor, findMostDistantPoint, getRandomPoints, calcAvgDistanceBetweenPoints, calcDistanceBetweenPoints, delay } from "./utils.js";
 
 let observations = []
 let clusters = []
@@ -7,7 +7,7 @@ let clusters = []
 let canvas = document.getElementById("canvas")
 let canvasCtx = canvas.getContext("2d")
 
-canvas.width = 600;
+canvas.width = 400;
 canvas.height = 400;
 
 let observationsAmount = 20000
@@ -15,6 +15,54 @@ let observationsAmount = 20000
 let thresholdDistance = 0
 
 observations = getRandomPoints(observationsAmount, canvas.width, canvas.height)
+
+const runAlgorithm = async () => {
+    clusters = []
+    clusters.push({ point: observations[0], belongPoints: [], color: generateRandomColor() })
+    const mostDistantPoint = findMostDistantPoint(observations[0], observations.filter(p => p !== observations[0]))
+    clusters.push({ point: mostDistantPoint, belongPoints: [], color: generateRandomColor() })
+    let condition = false
+    do {
+        await delay(5000)
+        condition = false
+        clearCanvas()
+        clearClusters(clusters)
+        splitBetweenClusters(clusters, observations)
+        const distance = calcAvgDistanceBetweenPoints(clusters.map(c => c.point)) / 2
+        clusters.forEach((cluster, i) => {
+            drawPoints(cluster.belongPoints, {radius: 1, color: cluster.color})
+            drawPoints([cluster.point], {radius: 5, color: cluster.color})
+
+            let mostDistantPoint = findMostDistantPoint(cluster.point, cluster.belongPoints)
+            if (calcDistanceBetweenPoints(mostDistantPoint, cluster.point) > distance) {
+                clusters.push({ point: mostDistantPoint, belongPoints: [], color: generateRandomColor() })
+                condition = true
+            }
+        })
+    } while (condition)
+}
+
+const clearClusters = (clusters) => {
+    clusters.forEach(cluster => {
+        cluster.belongPoints = []
+    })
+}
+
+const splitBetweenClusters = (clusters, observations) => {
+    observations.forEach(observation => {
+        chooseCluster(observation, clusters)
+    })
+}
+
+const chooseCluster = (point, clusters) => {
+    let choosenCluster = clusters[0]
+    clusters.forEach(cluster => {
+        if (calcDistanceBetweenPoints(cluster.point, point) < calcDistanceBetweenPoints(choosenCluster.point, point)) {
+            choosenCluster = cluster
+        }
+    })
+    choosenCluster.belongPoints.push(point)
+}
 
 const drawPoints = (points, options) => {
     canvasCtx.fillStyle = options.color || prepareObservationsColor
@@ -31,31 +79,6 @@ const clearCanvas = () => {
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
-/*  Calculations for calcAvgDistanceBetweenPoints function
-    (3, 10) (5, 15) (2, 9)
-
-    sqrt(pow(x1-x2) + pow(y1-y2))
-
-    sqrt(pow(2) + pow(5)) = sqrt(29) = 5.385
-    sqrt(pow(1) + pow(1)) = sqrt(2) = 1.414
-    sqrt(pow(3) + pow(6)) = sqrt(45) = 6.708
-
-    4.502
-
-    (3, 10) (5, 15) (2, 9) (6, 4)
-
-    sqrt(pow(x1 - x2) + pow(y1 - y2))
-
-    sqrt(pow(2) + pow(5)) = sqrt(29) = 5.385
-    sqrt(pow(1) + pow(1)) = sqrt(2) = 1.414
-    sqrt(pow(3) + pow(6)) = sqrt(45) = 6.708
-    sqrt(pow(3) + pow(6)) = sqrt(45) = 6.708
-sqrt(pow(1) + pow(11)) = sqrt(122) = 11.045
-*/
-
-let test = [{x: 3, y: 10}, {x: 5, y: 15}, {x: 2, y: 9}, {x: 6, y: 4}]
-
-console.log(calcAvgDistanceBetweenPoints(test))
-
-clearCanvas()
-drawPoints(observations, {radius: 1.25, color: generateRandomColor()})
+// clearCanvas()
+// drawPoints(observations, {radius: 1.25, color: generateRandomColor()})
+runAlgorithm()

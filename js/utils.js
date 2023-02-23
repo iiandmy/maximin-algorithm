@@ -25,6 +25,17 @@ export const calcAvgDistanceBetweenPoints = (points) => {
     return avgDistances / points.length
 }
 
+export const findMostDistantPoint = (from, points) => {
+    let mostDistantPoint = points[0]
+
+    points.forEach(point => {
+        if (calcDistanceBetweenPoints(from, point) > calcDistanceBetweenPoints(from, mostDistantPoint)) {
+            mostDistantPoint = point
+        }
+    })
+    return mostDistantPoint
+}
+
 const calcAvgDistanceFromOnePoint = (p, points) => {
     let sumOfDistances = 0
     points.forEach(point => {
